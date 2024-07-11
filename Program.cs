@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using StudentManager.Data;
+
 namespace StudentManager
 {
     public class Program
@@ -8,6 +11,10 @@ namespace StudentManager
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddDbContext<ApplicationDbContext>(
+                options => options.UseSqlServer(builder.Configuration.GetConnectionString("StudentManagerConnectionString"))
+            );
 
             var app = builder.Build();
 
