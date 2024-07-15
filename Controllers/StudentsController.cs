@@ -46,5 +46,30 @@ namespace StudentManager.Controllers
 
             return View(students);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            var student = await dbContext.Students.FindAsync(id);
+            return View(student);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(Student editStudentViewModel)
+        {
+            var student = await dbContext.Students.FindAsync(editStudentViewModel.Id);
+
+            if(student is not null)
+            {
+                student.Name = editStudentViewModel.Name;
+                student.Email = editStudentViewModel.Email;
+                student.Phone = editStudentViewModel.Phone;
+                student.Subscribed = editStudentViewModel.Subscribed;
+
+                await dbContext.SaveChangesAsync(); dbContext.Students.AddAsync(student);
+            };
+
+            return RedirectToAction("List", "Students");
+        }
     }
 }
