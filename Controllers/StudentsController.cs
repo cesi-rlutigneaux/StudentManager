@@ -55,18 +55,34 @@ namespace StudentManager.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Student editStudentViewModel)
+        public async Task<IActionResult> Edit(Student studentViewModel)
         {
-            var student = await dbContext.Students.FindAsync(editStudentViewModel.Id);
+            var student = await dbContext.Students.FindAsync(studentViewModel.Id);
 
             if(student is not null)
             {
-                student.Name = editStudentViewModel.Name;
-                student.Email = editStudentViewModel.Email;
-                student.Phone = editStudentViewModel.Phone;
-                student.Subscribed = editStudentViewModel.Subscribed;
+                student.Name = studentViewModel.Name;
+                student.Email = studentViewModel.Email;
+                student.Phone = studentViewModel.Phone;
+                student.Subscribed = studentViewModel.Subscribed;
 
-                await dbContext.SaveChangesAsync(); dbContext.Students.AddAsync(student);
+                await dbContext.SaveChangesAsync();
+            };
+
+            return RedirectToAction("List", "Students");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(Student studentViewModel)
+        {
+            var student = await dbContext.Students
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == studentViewModel.Id);
+
+            if (student is not null)
+            {
+                dbContext.Students.Remove(studentViewModel);
+                await dbContext.SaveChangesAsync(); 
             };
 
             return RedirectToAction("List", "Students");
