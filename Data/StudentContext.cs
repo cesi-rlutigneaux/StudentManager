@@ -3,9 +3,9 @@ using StudentManager.Models.Entities;
 
 namespace StudentManager.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class StudentContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        public StudentContext(DbContextOptions<StudentContext> options) : base(options)
         {
             
         }

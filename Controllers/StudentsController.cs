@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using StudentManager.Data;
+using StudentManager.Services;
 using StudentManager.Models.Entities;
 using StudentManager.Models.ViewModels;
 
@@ -8,11 +8,19 @@ namespace StudentManager.Controllers
 {
     public class StudentsController : Controller
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly IStudentService _studentService;
 
-        public StudentsController(ApplicationDbContext dbContext) 
+        public StudentsController(IStudentService studentService)
         {
-            this.dbContext=dbContext;
+            _studentService = studentService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var students = await _studentService.GetAllStudentsAsync();
+
+            return View(students);
         }
 
         [HttpGet]
@@ -22,7 +30,7 @@ namespace StudentManager.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(AddStudentViewModel addStudentViewModel)
+        public async Task<IActionResult> Add(StudentViewModel addStudentViewModel)
         {
             var student = new Student
             {
@@ -32,60 +40,92 @@ namespace StudentManager.Controllers
                 Subscribed = addStudentViewModel.Subscribed,
             };
 
-            await dbContext.Students.AddAsync(student);
-
-            await dbContext.SaveChangesAsync();
+            await _studentService.CreateStudentAsync(student);
 
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> Edit(Guid? id)
         {
-            var students = await dbContext.Students.ToListAsync();
+            if (id == null)
+            {
+                return BadRequest();
+            }
 
-            return View(students);
-        }
+            var student = await _studentService.GetStudentByIdAsync(id.Value);
 
-        [HttpGet]
-        public async Task<IActionResult> Edit(Guid id)
-        {
-            var student = await dbContext.Students.FindAsync(id);
-            return View(student);
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            var studentViewModel = new StudentViewModel
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Email = student.Email,
+                Phone = student.Phone,
+                Subscribed = student.Subscribed
+            };
+
+            return View(studentViewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Student studentViewModel)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(StudentViewModel studentViewModel)
         {
-            var student = await dbContext.Students.FindAsync(studentViewModel.Id);
-
-            if(student is not null)
+            if (ModelState.IsValid)
             {
-                student.Name = studentViewModel.Name;
-                student.Email = studentViewModel.Email;
-                student.Phone = studentViewModel.Phone;
-                student.Subscribed = studentViewModel.Subscribed;
+                var student = new Student
+                {
+                    Id = studentViewModel.Id,
+                    Name = studentViewModel.Name,
+                    Email = studentViewModel.Email,
+                    Phone = studentViewModel.Phone,
+                    Subscribed = studentViewModel.Subscribed
+                };
 
-                await dbContext.SaveChangesAsync();
-            };
+                await _studentService.UpdateStudentAsync(student);
+                return RedirectToAction(nameof(Index));
+            }
 
-            return RedirectToAction("List", "Students");
+            return View(studentViewModel);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Delete(Student studentViewModel)
+        public async Task<IActionResult> Delete(Guid? id)
         {
-            var student = await dbContext.Students
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == studentViewModel.Id);
-
-            if (student is not null)
+            if (id == null)
             {
-                dbContext.Students.Remove(studentViewModel);
-                await dbContext.SaveChangesAsync(); 
+                return BadRequest();
+            }
+
+            var student = await _studentService.GetStudentByIdAsync(id.Value);
+
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            var studentViewModel = new StudentViewModel
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Email = student.Email,
+                Phone = student.Phone,
+                Subscribed = student.Subscribed
             };
 
-            return RedirectToAction("List", "Students");
+            return View(studentViewModel);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        {
+            await _studentService.DeleteStudentAsync(id);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

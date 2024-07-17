@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StudentManager.Data;
+using StudentManager.Services;
 
 namespace StudentManager
 {
@@ -10,9 +11,11 @@ namespace StudentManager
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddControllersWithViews();
+            builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 
-            builder.Services.AddDbContext<ApplicationDbContext>(
+            builder.Services.AddScoped<IStudentService, StudentService>();
+
+            builder.Services.AddDbContext<StudentContext>(
                 options => options.UseSqlServer(builder.Configuration.GetConnectionString("StudentManagerConnectionString"))
             );
 
