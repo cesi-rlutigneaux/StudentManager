@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using StudentManager.Data;
 using StudentManager.Services;
+using Microsoft.AspNetCore.Identity;
+using StudentManager.Areas.Identity.Data;
 
 namespace StudentManager
 {
@@ -18,6 +20,10 @@ namespace StudentManager
             builder.Services.AddDbContext<StudentContext>(
                 options => options.UseSqlServer(builder.Configuration.GetConnectionString("StudentManagerConnectionString"))
             );
+
+            builder.Services.AddDefaultIdentity<User>(
+                options => options.SignIn.RequireConfirmedAccount = false)
+                .AddEntityFrameworkStores<StudentContext>();
 
             var app = builder.Build();
 
@@ -39,6 +45,8 @@ namespace StudentManager
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.MapRazorPages();
 
             app.Run();
         }
