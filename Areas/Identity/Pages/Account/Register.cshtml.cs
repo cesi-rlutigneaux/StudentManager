@@ -16,7 +16,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StudentManager.Areas.Identity.Data;
 
@@ -30,13 +32,15 @@ namespace StudentManager.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<User> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
             UserManager<User> userManager,
             IUserStore<User> userStore,
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +48,7 @@ namespace StudentManager.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -65,12 +70,18 @@ namespace StudentManager.Areas.Identity.Pages.Account
         /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
+        public IList<SelectListItem> Roles { get; set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         public class InputModel
         {
+            [Required]
+            [Display(Name = "Role")]
+            public string Role { get; set; }
+
             [Required]
             [StringLength(255,ErrorMessage ="Max 255 characters are allowed")]
             [Display(Name = "FirstName")]
@@ -114,6 +125,7 @@ namespace StudentManager.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            Roles = await GetRolesAsync();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -135,6 +147,7 @@ namespace StudentManager.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    await _userManager.AddToRoleAsync(user, Input.Role);
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -163,8 +176,20 @@ namespace StudentManager.Areas.Identity.Pages.Account
                 }
             }
 
+            Roles = await GetRolesAsync();
+
             // If we got this far, something failed, redisplay form
             return Page();
+        }
+
+        private async Task<IList<SelectListItem>> GetRolesAsync()
+        {
+            var roles = await _roleManager.Roles.ToListAsync();
+            return roles.Select(role => new SelectListItem
+            {
+                Value = role.Name,
+                Text = role.Name
+            }).ToList();
         }
 
         private User CreateUser()

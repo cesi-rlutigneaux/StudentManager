@@ -25,7 +25,7 @@ namespace StudentManager.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Acheteur, Vendeur")]
         public IActionResult Add()
         {
             return View();
