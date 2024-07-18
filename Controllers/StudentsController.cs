@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using StudentManager.Services;
 using StudentManager.Models.Entities;
 using StudentManager.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StudentManager.Controllers
 {
@@ -24,6 +25,7 @@ namespace StudentManager.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public IActionResult Add()
         {
             return View();
