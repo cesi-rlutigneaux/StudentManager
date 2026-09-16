@@ -19,7 +19,7 @@ namespace StudentManager.Services
             return await _context.Students.ToListAsync();
         }
 
-        public async Task<Student> GetStudentByIdAsync(Guid id)
+        public async Task<Student?> GetStudentByIdAsync(Guid id)
         {
             return await _context.Students.FindAsync(id);
         }
