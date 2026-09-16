@@ -25,13 +25,14 @@ namespace StudentManager.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Acheteur, Vendeur")]
+        [Authorize(Roles = "Acheteur, Vendeur, Administrateur")]
         public IActionResult Add()
         {
             return View();
         }
 
         [HttpPost]
+        [Authorize(Roles = "Acheteur, Vendeur, Administrateur")]
         public async Task<IActionResult> Add(StudentViewModel addStudentViewModel)
         {
             var student = new Student
